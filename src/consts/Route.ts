@@ -8,6 +8,16 @@ enum Route {
    * (`Route.LOGIN`).
    */
   HOME = '/',
+
+  /**
+   * Главная страница раздела входа в систему.
+   */
+  LOGIN = '/login',
+
+  /**
+   * Главная страница приватной части системы.
+   */
+  DASHBOARD = '/dashboard',
 }
 
 export default Route;

@@ -59,6 +59,9 @@ export default class RpcService {
     Boolean(params);
     Boolean(headers);
     Boolean(this.config);
+
+    const delay = Math.floor(Math.random() * 2500);
+    return new Promise<void>((resolve) => setTimeout(resolve, delay));
   }
 
   /**
@@ -90,71 +93,6 @@ export default class RpcService {
         RpcMethod.AUTHORIZE,
         params,
         RpcErrorCode.BAD_AUTH_CREDENTIALS
-      );
-    }
-
-    const token =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjF9.8lSCknTnRANlJ0AVzCgO2yF838WYA7bLaAR7vAKnofo';
-
-    const tokens: AuthTokens = {
-      refresh: token,
-      access: token,
-    };
-
-    return tokens;
-  }
-
-  /**
-   * Указывает серверу выслать код подтверждения входа на телефон пользователя,
-   * имеющего указанный логин и пароль.
-   * @param username Имя пользователя.
-   * @param password Пароль.
-   */
-  public async requestAuthCode(username: string, password: string) {
-    const params = {
-      username,
-      password,
-    };
-
-    await this.fetch(RpcMethod.REQUEST_AUTH_CODE, params);
-
-    if (username === 'admin' && password === '1234') {
-      return;
-    }
-
-    throw this.makeError(
-      RpcMethod.REQUEST_AUTH_CODE,
-      params,
-      RpcErrorCode.BAD_AUTH_CREDENTIALS
-    );
-  }
-
-  /**
-   * Отправляет указанный код подтверждения входа пользователя с переданными
-   * реквизитами на сервер, и, если данные валидны, получает от него токены
-   * авторизации в RPC API.
-   * @param username Имя пользователя.
-   * @param password Пароль пользователя.
-   * @param code Код подтверждения входа.
-   */
-  public async confirmAuthCode(
-    username: string,
-    password: string,
-    code: string
-  ) {
-    const params = {
-      username,
-      password,
-      code,
-    };
-
-    await this.fetch(RpcMethod.CONFIRM_AUTH_CODE, params);
-
-    if (code !== '1234') {
-      throw this.makeError(
-        RpcMethod.CONFIRM_AUTH_CODE,
-        params,
-        RpcErrorCode.BAD_AUTH_CODE
       );
     }
 
