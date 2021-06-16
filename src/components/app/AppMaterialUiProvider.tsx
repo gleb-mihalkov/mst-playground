@@ -1,13 +1,13 @@
 import { FC, useMemo } from 'react';
 import { ThemeProvider, CssBaseline } from '@material-ui/core';
 
-import { createTheme } from 'theme/createTheme';
+import createTheme from 'theme/createTheme';
 
 /**
  * Предоставляет контекст темы для библиотеки Material UI. Сама тема
  * настраивается внутри каталога `src/theme`.
  */
-const MaterialUiProvider: FC = ({ children }) => {
+const AppMaterialUiProvider: FC = ({ children }) => {
   const theme = useMemo(createTheme, []);
 
   return (
@@ -18,4 +18,4 @@ const MaterialUiProvider: FC = ({ children }) => {
   );
 };
 
-export default MaterialUiProvider;
+export default AppMaterialUiProvider;

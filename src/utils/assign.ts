@@ -1,4 +1,4 @@
-import { IStateTreeNode } from 'mobx-state-tree';
+import { IStateTreeNode, IJsonPatch, applyPatch } from 'mobx-state-tree';
 import { action } from 'mobx';
 
 /**
@@ -12,14 +12,19 @@ function assign<TNode extends IStateTreeNode>(
 ) {
   const keys = Object.keys(values);
   const { length } = keys;
+  const patches: IJsonPatch[] = [];
 
   for (let i = 0; i < length; i += 1) {
-    const key = keys[i] as keyof TNode;
+    const key = keys[i] as keyof typeof values;
 
-    if (Object.prototype.hasOwnProperty.call(values, key)) {
-      self[key] = values[key];
-    }
+    patches.push({
+      value: values[key],
+      path: `./${key}`,
+      op: 'add',
+    });
   }
+
+  applyPatch(self, patches);
 }
 
 export default action(assign);

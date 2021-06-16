@@ -64,14 +64,10 @@ export default types
             error: LoginError.BAD_CREDENTIALS,
             pending: false,
           });
-
           return;
         }
 
-        assign(self, {
-          pending: false,
-        });
-
+        assign(self, { pending: false });
         throw error;
       }
 

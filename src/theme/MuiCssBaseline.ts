@@ -1,6 +1,9 @@
 import { ThemeOptions } from '@material-ui/core';
 
-export const MuiCssBaseline: ThemeOptions = {
+/**
+ * Глобальные стили для всех элементов форм.
+ */
+const MuiCssBaseline: ThemeOptions = {
   overrides: {
     MuiCssBaseline: {
       '@global': {
@@ -19,3 +22,5 @@ export const MuiCssBaseline: ThemeOptions = {
     },
   },
 };
+
+export default MuiCssBaseline;

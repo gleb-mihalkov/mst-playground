@@ -76,6 +76,8 @@ export default class RpcService {
     if (Error.captureStackTrace) {
       Error.captureStackTrace(error, this.makeError);
     }
+
+    return error;
   }
 
   /**

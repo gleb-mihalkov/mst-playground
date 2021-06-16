@@ -1,3 +1,6 @@
+import { unprotect } from 'mobx-state-tree';
+import { connectReduxDevtools } from 'mst-middlewares';
+
 import RootModel from 'models/RootModel';
 
 /**
@@ -5,6 +8,7 @@ import RootModel from 'models/RootModel';
  */
 export default function createStore() {
   const store = RootModel.create();
+  unprotect(store);
 
   const keys = Object.keys(store);
   const { length } = keys;
@@ -18,6 +22,16 @@ export default function createStore() {
       if (model && typeof model.beforeMount === 'function') {
         model.beforeMount();
       }
+    }
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    if (typeof window !== 'undefined') {
+      connectReduxDevtools(require('remotedev'), store, {
+        logChildActions: true,
+        logArgsNearName: false,
+        logIdempotentActionSteps: false,
+      });
     }
   }
 

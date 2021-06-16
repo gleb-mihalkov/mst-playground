@@ -1,9 +1,14 @@
-import { createMuiTheme } from '@material-ui/core';
+import { createMuiTheme, ThemeOptions } from '@material-ui/core';
 import merge from 'deepmerge';
 
-import { MuiCssBaseline } from './MuiCssBaseline';
+import MuiFormControl from './MuiFormControl';
+import MuiCssBaseline from './MuiCssBaseline';
 
-export const createTheme = () => {
-  const options = merge({}, MuiCssBaseline);
+export default function createTheme() {
+  let options: ThemeOptions = {};
+
+  options = merge(options, MuiCssBaseline);
+  options = merge(options, MuiFormControl);
+
   return createMuiTheme(options);
-};
+}

@@ -6,7 +6,7 @@ import createStore from 'utils/createStore';
 /**
  * Предоставляет контекст для хранилища моделей системы.
  */
-const StoreProvider: FC = ({ children }) => {
+const AppStoreProvider: FC = ({ children }) => {
   const value = useMemo(createStore, []);
 
   return (
@@ -14,4 +14,4 @@ const StoreProvider: FC = ({ children }) => {
   );
 };
 
-export default StoreProvider;
+export default AppStoreProvider;
