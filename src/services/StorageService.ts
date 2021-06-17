@@ -13,7 +13,7 @@ export default class StorageService {
    * всех ключей, с которыми он будет работать.
    * @param prefix Префикс.
    */
-  public constructor(prefix: string = '') {
+  public constructor(prefix?: string) {
     this.prefix = prefix;
   }
 
