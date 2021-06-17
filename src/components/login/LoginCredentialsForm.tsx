@@ -2,6 +2,7 @@ import { FC } from 'react';
 import { Grid, TextField, Button } from '@material-ui/core';
 import * as Yup from 'yup';
 import { observer } from 'mobx-react';
+import memoize from 'memoize-one';
 
 import useFormik from 'hooks/useFormik';
 import useStore from 'hooks/useStore';
@@ -23,11 +24,31 @@ type Values = {
 
 /**
  * Схема валидации формы.
+ * @param badUsername Неверное имя, которое ввёл пользователь при предыдущей
+ * отправке.
+ * @param badPassword Неверный пароль, кототорый ввёл пользователь при
+ * предыдущей отправке.
  */
-const schema = Yup.object().shape({
-  username: Yup.string().required('Введите имя пользователя'),
-  password: Yup.string().required('Введите пароль'),
-});
+const getSchema = memoize(
+  (badUsername?: string, badPassword?: string): Yup.SchemaOf<Values> =>
+    Yup.object().shape({
+      password: Yup.string().required('Введите пароль'),
+
+      username: Yup.string()
+        .required('Введите имя пользователя')
+        .test({
+          name: 'bad_credentials',
+          message: 'Неверное имя пользователя или пароль',
+          exclusive: true,
+          test(_, context) {
+            return (
+              context.parent.password !== badPassword ||
+              context.parent.username !== badUsername
+            );
+          },
+        }),
+    })
+);
 
 /**
  * Отображает форму ввода реквизитов пользователя для входа в систему.
@@ -43,7 +64,12 @@ const LoginCredentialsForm: FC = () => {
       password: '',
     },
 
-    validationSchema: schema,
+    validateOnSchemaChange: true,
+
+    validationSchema: getSchema(
+      store.login.badUsername,
+      store.login.badPassword
+    ),
 
     onSubmit(values) {
       store.login.submitCredentials(values.username, values.password);
@@ -55,7 +81,7 @@ const LoginCredentialsForm: FC = () => {
       <Grid container spacing={2}>
         <Grid item md={12}>
           <TextField
-            {...formik.bindInput('username')}
+            {...formik.bindTextField('username')}
             variant="outlined"
             label="Имя пользователя"
             autoComplete="username"
@@ -63,7 +89,7 @@ const LoginCredentialsForm: FC = () => {
         </Grid>
         <Grid item md={12}>
           <TextField
-            {...formik.bindInput('password')}
+            {...formik.bindTextField('password')}
             variant="outlined"
             label="Пароль"
             type="password"

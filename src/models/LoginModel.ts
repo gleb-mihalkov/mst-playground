@@ -1,14 +1,10 @@
-import { runInAction } from 'mobx';
 import { types } from 'mobx-state-tree';
 
-import LoginError from 'consts/LoginError';
 import RpcErrorCode from 'consts/RpcErrorCode';
 import RpcHelper from 'helpers/RpcHelper';
-
 import getStore from 'utils/getStore';
 import assign from 'utils/assign';
 import AuthTokens from 'entities/AuthTokens';
-import { strictEqual } from 'assert';
 
 /**
  * Модель сценария входа пользователя в систему.
@@ -23,11 +19,18 @@ export default types
     pending: types.optional(types.boolean, false),
 
     /**
-     * Ошибка, которая возникла во время прохождения сценария.
+     * Если сервер ответил, что переданное реквизиты входа неверны, введённое
+     * пользователем имя сохраняется сюда. Поле используется для отображения
+     * ошибки на форме.
      */
-    error: types.maybe(
-      types.enumeration<LoginError>(Object.values(LoginError))
-    ),
+    badUsername: types.maybe(types.string),
+
+    /**
+     * Если сервер ответил, что переданные реквизиты входа неверны, введённый
+     * пользователем пароль сохраняется сюда. Поле используется для
+     * отображения ошибки на форме.
+     */
+    badPassword: types.maybe(types.string),
   })
 
   .actions((self) => ({
@@ -49,10 +52,7 @@ export default types
         throw new Error(`Expect current user to be unauthorized`);
       }
 
-      assign(self, {
-        error: undefined,
-        pending: true,
-      });
+      assign(self, { pending: true });
 
       let tokens: AuthTokens;
 
@@ -61,7 +61,8 @@ export default types
       } catch (error) {
         if (RpcHelper.isError(error, RpcErrorCode.BAD_AUTH_CREDENTIALS)) {
           assign(self, {
-            error: LoginError.BAD_CREDENTIALS,
+            badUsername: username,
+            badPassword: password,
             pending: false,
           });
           return;

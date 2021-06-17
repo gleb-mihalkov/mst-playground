@@ -1,3 +1,5 @@
+import { ComponentPropsWithoutRef, useEffect, useRef } from 'react';
+import { TextField } from '@material-ui/core';
 import {
   useFormik as useFormikBase,
   FormikValues,
@@ -19,6 +21,18 @@ type Config<TValues extends FormikValues> = Omit<
   name: string;
 
   /**
+   * Указывает, что следует запустить повторную валидацию формы, если объект,
+   * переданный в свойство `validationSchema`, изменился (то есть, если
+   * поменялись правила валидации).
+   *
+   * Таким образом мы получаем возможность валидировать форму по внешним
+   * триггерам: например, когда сервер укажет, что мы прислали ему некорректные
+   * данные с формы.
+   * @default false
+   */
+  validateOnSchemaChange?: boolean;
+
+  /**
    * Обрабатывает успешную отправку формы.
    * @param values Значения полей формы.
    * @param helpers Коллекция вспомогательных методов и свойств Formik.
@@ -30,85 +44,186 @@ type Config<TValues extends FormikValues> = Omit<
 };
 
 /**
+ * Свойства компонента `TextField`.
+ */
+type TextFieldProps = Partial<ComponentPropsWithoutRef<typeof TextField>>;
+
+/**
+ * Свойства компонента формы.
+ */
+type FormProps = Partial<ComponentPropsWithoutRef<'form'>>;
+
+/**
+ * Свойства компонента кнопки.
+ */
+type ButtonProps = Partial<ComponentPropsWithoutRef<'button'>>;
+
+/**
  * Обработчик отправки формы по умолчанию.
  */
 const DEFAULT_ON_SUBMIT = () => {};
 
 /**
- * Генерирует идентификатор.
- * @param baseName Основное имя.
- * @param name Вспомогательная часть.
+ * Генерирует идентификатор в `camelCase`.
+ * @param args Список частей идентификатора.
  */
-function getId(baseName: string, name: string) {
-  const firstLetter = name.substr(0, 1).toUpperCase();
-  const restWord = name.substr(1);
-  const nextName = `${firstLetter}${restWord}`;
-  return `${baseName}${nextName}`;
+function joinId(...args: string[]) {
+  const { length } = args;
+  let id: string = '';
+
+  for (let i = 0; i < length; i += 1) {
+    let value = args[i];
+
+    if (value) {
+      if (i > 0) {
+        const head = value.charAt(0).toUpperCase();
+        const tail = value.substr(1);
+        value = `${head}${tail}`;
+      }
+
+      id += value;
+    }
+  }
+
+  return id;
 }
 
 /**
- * Возвращает объект состояния формы.
+ * Возвращает объект состояния формы. Фактически, данная функция служит обёрктой
+ * над функцией `useFormik` из библиотекой `formik`, но немного расширяет её
+ * поведение.
+ *
+ * Во-первых, в результат добавляются функции, которые возвращают свойства,
+ * подключающие элементы React к состоянию формы. Используется это так:
+ * `<TextField {...formik.bindTextField('field_name')} />`.
+ *
+ * Во-вторых, добавлено дополнительное условие валидации
+ * `validateOnSchemaChange`, при котором форма будет проверена повтроно, если
+ * схема валидации, переданная в `validationSchema`, изменилась.
+ *
+ * В-третьих, параметр `onSubmit` стал необязательным.
  * @param config Конфигурация формы.
  */
 export default function useFormik<TValues extends FormikValues>({
+  validateOnSchemaChange = false,
+  validationSchema,
   onSubmit = DEFAULT_ON_SUBMIT,
   name: formName,
   ...config
 }: Config<TValues>) {
-  const formik = useFormikBase({ ...config, onSubmit });
-  const formId = getId(formName, 'form');
+  const formik = useFormikBase({
+    ...config,
+    validationSchema,
+    onSubmit,
+  });
+
+  const formId = joinId(formName, 'form');
+
+  /**
+   * Статус валидации формы. `'none'` означает, что форма процесс валидации
+   * формы ещё ни разу не запускался. `'validating'` означает, что валидация
+   * идёт в данный момент. И, наконец, `'validated'` говорит нам, что валидация
+   * формы завершена.
+   *
+   * Данный статус используется для реализации валидации по условию
+   * `validateOnSchemaChange`.
+   */
+  const validationStatus = useRef<'none' | 'validating' | 'validated'>('none');
+  const { isValidating } = formik;
+
+  useEffect(() => {
+    if (validationStatus.current === 'none') {
+      validationStatus.current = isValidating ? 'validating' : 'none';
+    } else {
+      validationStatus.current = isValidating ? 'validating' : 'validated';
+    }
+  }, [isValidating]);
+
+  /**
+   * Важно: мы оборачиваем функцию валидации в формы в mutable ref для того,
+   * чтобы последующие `useEffect` не запускались, если эта функция изменится.
+   * При этом в `validateFormRef.current` всегда будет актуальная функция
+   * валидации.
+   */
+  const { validateForm } = formik;
+  const validateFormRef = useRef<() => void>(validateForm);
+  validateFormRef.current = validateForm;
+
+  /**
+   * Так же мы поступаем и с самим флагом `validateOnSchemaChange`. Нас
+   * интересует лишь то значение, которое было передано в настройки формы
+   * при её инициализации. Если флаг изменится в процессе использования -
+   * не наша проблема.
+   */
+  const validateOnSchemaChangeRef = useRef<boolean>(validateOnSchemaChange);
+
+  /**
+   * И, наконец, реализация валидации по `validateOnSchemaChange`. Данный
+   * эффект будет выполняться только если: раз - форма уже валидировалась
+   * (и валидация не происходят прямо сейчас), два - флаг из настроек формы
+   * взведён, и три - изменилось значение `validationSchema`.
+   */
+  useEffect(() => {
+    if (
+      validateOnSchemaChangeRef.current &&
+      validationStatus.current === 'validated'
+    ) {
+      validateFormRef.current();
+    }
+  }, [validationSchema]);
 
   return {
     ...formik,
 
     /**
-     * Возвращает коллекцию свойств, которые подключают компонент формы
-     * в контекст Formik.
+     * Возвращает коллекцию свойств, которые подключают элемент формы в
+     * контекст Formik.
      */
-    bindForm() {
+    bindForm(): FormProps {
       return {
+        name: formName,
+        id: formId,
         onSubmit: formik.handleSubmit,
         onReset: formik.handleReset,
         noValidate: true,
-        name: formName,
-        id: formId,
-        ['data-testid']: formId,
       };
     },
 
     /**
-     * Возвращает коллекцию свойств, которые подключают компонент поля ввода
+     * Возвращает коллекцию свойств, которые подключают поле ввода `TextField`
      * в контекст Formik.
      * @param name Название поля ввода.
      */
-    bindInput(name: keyof TValues) {
-      const id = getId(formName, name as string);
+    bindTextField(name: keyof TValues): TextFieldProps {
+      const id = joinId(formName, name as string);
 
       const touched = getIn(formik.touched, name as string);
       const error = getIn(formik.errors, name as string);
 
-      const hasVisibleError = touched && error != null;
-      const errorMessage = hasVisibleError ? error : undefined;
+      const isErrorShowed = touched && error != null;
+      const helperText = isErrorShowed ? error : undefined;
 
       return {
         id,
-        ['data-testid']: id,
+        name: String(name),
         onChange: formik.handleChange,
         onBlur: formik.handleBlur,
-        helperText: errorMessage,
-        error: hasVisibleError,
-        name: name,
+        helperText: helperText,
+        error: isErrorShowed,
       };
     },
 
-    bindSubmitButton() {
-      const id = getId(formName, 'submitButton');
+    /**
+     * Возвращает коллекцию свойств, которые подключают кнопку отправки формы
+     * в контекст Formik.
+     */
+    bindSubmitButton(): ButtonProps {
+      const id = joinId(formName, 'submit', 'button');
 
       return {
         id,
-        ['data-testid']: id,
-        type: 'submit' as 'submit',
         form: formId,
+        type: 'submit' as 'submit',
       };
     },
   };

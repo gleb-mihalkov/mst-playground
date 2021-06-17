@@ -1,4 +1,3 @@
-import { unprotect } from 'mobx-state-tree';
 import { connectReduxDevtools } from 'mst-middlewares';
 
 import RootModel from 'models/RootModel';
@@ -8,7 +7,6 @@ import RootModel from 'models/RootModel';
  */
 export default function createStore() {
   const store = RootModel.create();
-  unprotect(store);
 
   const keys = Object.keys(store);
   const { length } = keys;
