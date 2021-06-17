@@ -22,6 +22,7 @@
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "remotedev": "^0.2.9",
+    "rifm": "^0.12.0",
     "yup": "^0.32.9"
   },
   "devDependencies": {

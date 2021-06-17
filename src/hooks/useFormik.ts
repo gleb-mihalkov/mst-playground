@@ -199,7 +199,10 @@ export default function useFormik<TValues extends FormikValues>({
       const isErrorShowed = touched && error != null;
       const errorMessage = isErrorShowed ? error : undefined;
 
+      const value = getIn(formik.values, name as string);
+
       return {
+        value,
         id,
         name: String(name),
         onChange: formik.handleChange,
