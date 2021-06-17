@@ -1,5 +1,7 @@
 import NextApp from 'next/app';
 
+import 'register/registerYup';
+
 import App from 'components/app/App';
 
 /**
