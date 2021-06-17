@@ -1,5 +1,9 @@
 import { FC } from 'react';
 import { Box, makeStyles, Container } from '@material-ui/core';
+import { observer } from 'mobx-react';
+import useStore from 'hooks/useStore';
+import Replace from 'components/router/Replace';
+import Route from 'consts/Route';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -23,10 +27,16 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 /**
- * Отображает обрамление страницы в разделе входа в систему.
+ * Отображает обрамление страницы в разделе входа в систему. Также проверяет,
+ * может ли текущий пользователь находиться в разделе входа в систему.
  */
 const LoginLayout: FC = ({ children }) => {
   const classes = useStyles();
+  const store = useStore();
+
+  if (store.auth.isAuthorized) {
+    return <Replace to={Route.ACCOUNT} />;
+  }
 
   return (
     <Box className={classes.root}>
@@ -37,4 +47,4 @@ const LoginLayout: FC = ({ children }) => {
   );
 };
 
-export default LoginLayout;
+export default observer(LoginLayout);
