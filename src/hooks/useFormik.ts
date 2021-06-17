@@ -43,21 +43,6 @@ type Config<TValues extends FormikValues> = Omit<
 };
 
 /**
- * Свойства компонента `TextField`.
- */
-type TextFieldProps = Partial<ComponentPropsWithoutRef<typeof TextField>>;
-
-/**
- * Свойства компонента формы.
- */
-type FormProps = Partial<ComponentPropsWithoutRef<'form'>>;
-
-/**
- * Свойства компонента кнопки.
- */
-type ButtonProps = Partial<ComponentPropsWithoutRef<'button'>>;
-
-/**
  * Обработчик отправки формы по умолчанию.
  */
 const DEFAULT_ON_SUBMIT = () => {};
@@ -175,7 +160,7 @@ export default function useFormik<TValues extends FormikValues>({
      * Возвращает коллекцию свойств, которые подключают элемент формы в
      * контекст Formik.
      */
-    bindForm(): FormProps {
+    bindForm() {
       return {
         name: formName,
         id: formId,
@@ -190,7 +175,7 @@ export default function useFormik<TValues extends FormikValues>({
      * в контекст Formik.
      * @param name Название поля ввода.
      */
-    bindTextField(name: keyof TValues): TextFieldProps {
+    bindTextField(name: keyof TValues) {
       const id = joinId(formName, name as string);
 
       const touched = getIn(formik.touched, name as string);
@@ -201,11 +186,20 @@ export default function useFormik<TValues extends FormikValues>({
 
       const value = getIn(formik.values, name as string);
 
+      function onChange(data: any) {
+        if (typeof data === 'object' && data.target != null) {
+          formik.handleChange(data);
+        } else {
+          console.log(data);
+          formik.setFieldValue(name as string, data);
+        }
+      }
+
       return {
+        onChange,
         value,
         id,
         name: String(name),
-        onChange: formik.handleChange,
         onBlur: formik.handleBlur,
         helperText: errorMessage,
         error: isErrorShowed,
@@ -216,7 +210,7 @@ export default function useFormik<TValues extends FormikValues>({
      * Возвращает коллекцию свойств, которые подключают кнопку отправки формы
      * в контекст Formik.
      */
-    bindSubmitButton(): ButtonProps {
+    bindSubmitButton() {
       const id = joinId(formName, 'submit', 'button');
 
       return {

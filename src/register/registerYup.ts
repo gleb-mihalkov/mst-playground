@@ -1,5 +1,7 @@
 import * as Yup from 'yup';
 
+import PhoneHelper from 'helpers/PhoneHelper';
+
 /**
  * Здесь происходит расширение валидатора Yup. При добавлении новых валидаторов
  * ОБЯЗАТЕЛЬНО следует добавлять их типы в `@types/yup.d.ts`, иначе Typescript
@@ -19,6 +21,6 @@ Yup.addMethod(
   Yup.string,
   'phone',
   function (message: string = DEFAULT_PHONE_MESSAGE) {
-    return this.matches(/^\+\d{1}\s\d{3}\s\d{3}-\d{2}-\d{2}$/, message);
+    return this.matches(PhoneHelper.DISPLAY_REGEXP, message);
   }
 );

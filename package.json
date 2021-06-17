@@ -21,8 +21,8 @@
     "path-to-regexp": "^6.2.0",
     "react": "17.0.2",
     "react-dom": "17.0.2",
+    "react-imask": "^6.0.7",
     "remotedev": "^0.2.9",
-    "rifm": "^0.12.0",
     "yup": "^0.32.9"
   },
   "devDependencies": {
