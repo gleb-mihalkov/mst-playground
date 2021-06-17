@@ -25,9 +25,8 @@ type Config<TValues extends FormikValues> = Omit<
    * переданный в свойство `validationSchema`, изменился (то есть, если
    * поменялись правила валидации).
    *
-   * Таким образом мы получаем возможность валидировать форму по внешним
-   * триггерам: например, когда сервер укажет, что мы прислали ему некорректные
-   * данные с формы.
+   * Таким образом мы получаем возможность менять правила валидации на лету,
+   * и форма будет реагировать на это.
    * @default false
    */
   validateOnSchemaChange?: boolean;
@@ -95,7 +94,7 @@ function joinId(...args: string[]) {
  *
  * Во-первых, в результат добавляются функции, которые возвращают свойства,
  * подключающие элементы React к состоянию формы. Используется это так:
- * `<TextField {...formik.bindTextField('field_name')} />`.
+ * `<form {...formik.bindForm()} />`.
  *
  * Во-вторых, добавлено дополнительное условие валидации
  * `validateOnSchemaChange`, при котором форма будет проверена повтроно, если
@@ -120,13 +119,12 @@ export default function useFormik<TValues extends FormikValues>({
   const formId = joinId(formName, 'form');
 
   /**
-   * Статус валидации формы. `'none'` означает, что форма процесс валидации
-   * формы ещё ни разу не запускался. `'validating'` означает, что валидация
-   * идёт в данный момент. И, наконец, `'validated'` говорит нам, что валидация
-   * формы завершена.
+   * Статус валидации формы. `'none'` означает, что процесс валидации формы ещё
+   * ни разу не запускался. `'validating'` означает, что валидация идёт в
+   * данный момент. И, наконец, `'validated'` говорит нам, что валидация формы
+   * завершена.
    *
-   * Данный статус используется для реализации валидации по условию
-   * `validateOnSchemaChange`.
+   * Используется для реализации условия `validateOnSchemaChange`.
    */
   const validationStatus = useRef<'none' | 'validating' | 'validated'>('none');
   const { isValidating } = formik;
@@ -145,17 +143,15 @@ export default function useFormik<TValues extends FormikValues>({
    * При этом в `validateFormRef.current` всегда будет актуальная функция
    * валидации.
    */
-  const { validateForm } = formik;
-  const validateFormRef = useRef<() => void>(validateForm);
-  validateFormRef.current = validateForm;
+  const validateFormRef = useRef<() => void>(formik.validateForm);
+  validateFormRef.current = formik.validateForm;
 
   /**
-   * Так же мы поступаем и с самим флагом `validateOnSchemaChange`. Нас
-   * интересует лишь то значение, которое было передано в настройки формы
-   * при её инициализации. Если флаг изменится в процессе использования -
-   * не наша проблема.
+   * Так же мы поступаем и с самим флагом `validateOnSchemaChange` - чтобы не
+   * вводить следующий `useEffect` в заблуждение.
    */
   const validateOnSchemaChangeRef = useRef<boolean>(validateOnSchemaChange);
+  validateOnSchemaChangeRef.current = validateOnSchemaChange;
 
   /**
    * И, наконец, реализация валидации по `validateOnSchemaChange`. Данный
@@ -201,14 +197,14 @@ export default function useFormik<TValues extends FormikValues>({
       const error = getIn(formik.errors, name as string);
 
       const isErrorShowed = touched && error != null;
-      const helperText = isErrorShowed ? error : undefined;
+      const errorMessage = isErrorShowed ? error : undefined;
 
       return {
         id,
         name: String(name),
         onChange: formik.handleChange,
         onBlur: formik.handleBlur,
-        helperText: helperText,
+        helperText: errorMessage,
         error: isErrorShowed,
       };
     },
