@@ -190,7 +190,6 @@ export default function useFormik<TValues extends FormikValues>({
         if (typeof data === 'object' && data.target != null) {
           formik.handleChange(data);
         } else {
-          console.log(data);
           formik.setFieldValue(name as string, data);
         }
       }
