@@ -1,5 +1,11 @@
 import { FC } from 'react';
-import { Grid, TextField, Button } from '@material-ui/core';
+import {
+  Grid,
+  TextField,
+  Button,
+  Typography,
+  Tooltip,
+} from '@material-ui/core';
 import * as Yup from 'yup';
 import { observer } from 'mobx-react';
 import memoize from 'memoize-one';
@@ -97,14 +103,16 @@ const LoginCredentialsForm: FC = () => {
           />
         </Grid>
         <Grid item md={12}>
-          <Button
-            {...formik.bindSubmitButton()}
-            variant="contained"
-            color="primary"
-            disabled={store.login.pending}
-          >
-            Войти
-          </Button>
+          <Tooltip title="Реквизиты: admin / 1234">
+            <Button
+              {...formik.bindSubmitButton()}
+              variant="contained"
+              color="primary"
+              disabled={store.login.pending}
+            >
+              Войти
+            </Button>
+          </Tooltip>
         </Grid>
       </Grid>
     </form>

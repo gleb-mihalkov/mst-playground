@@ -1,26 +1,18 @@
 import { FC } from 'react';
-import Link from 'next/link';
+import { Container } from '@material-ui/core';
 
-import Route from 'consts/Route';
+import AccountLogout from 'components/account/AccountLogout';
 
 /**
  * Представляет главную страницу приватной части системы.
  */
 const AccountIndexPage: FC = () => (
-  <>
+  <Container>
     <h1>Account Page</h1>
-    <nav>
-      <Link href={Route.LOGIN}>
-        <a>To Login</a>
-      </Link>
-      <Link href={Route.RECOVERY}>
-        <a>To Recovery</a>
-      </Link>
-      <Link href={Route.ACCOUNT}>
-        <a>To Account</a>
-      </Link>
-    </nav>
-  </>
+    <p>
+      <AccountLogout />
+    </p>
+  </Container>
 );
 
 export default AccountIndexPage;
