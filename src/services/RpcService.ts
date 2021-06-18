@@ -146,4 +146,26 @@ export default class RpcService {
       );
     }
   }
+
+  /**
+   * Изменяет пароль пользователя и возвращает связку токенов для авторизации.
+   * @param password Новый пароль.
+   * @param phone Номер телефона пользователя.
+   * @param code Код подтверждения операции.
+   */
+  public async changePassword(password: string, phone: string, code: string) {
+    const params = { password, phone, code };
+
+    await this.fetch(RpcMethod.CHANGE_PASSWORD, params);
+
+    const token =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjF9.8lSCknTnRANlJ0AVzCgO2yF838WYA7bLaAR7vAKnofo';
+
+    const tokens: AuthTokens = {
+      refresh: token,
+      access: token,
+    };
+
+    return tokens;
+  }
 }

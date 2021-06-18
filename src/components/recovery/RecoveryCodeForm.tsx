@@ -56,7 +56,7 @@ const RecoveryCodeForm: FC = () => {
       code: '',
     },
 
-    validationSchema: getSchema(store.recovery.isLimitExceeded),
+    validationSchema: getSchema(store.recovery.isTriesExceeded),
 
     onSubmit(values) {
       const code = CodeHelper.parseDisplay(values.code);

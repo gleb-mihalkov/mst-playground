@@ -35,7 +35,7 @@ export default types
     /**
      * @inheritdoc
      */
-    beforeMount() {
+    afterMount() {
       self.refreshToken = getStore(self).storage.api.get(StorageKey.AUTH_TOKEN);
     },
 

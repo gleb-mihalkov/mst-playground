@@ -10,7 +10,7 @@ export default class CodeHelper {
   /**
    * Регулярное выражение для проверки строки в человекочитаемом формате.
    */
-  public static DISPLAY_REGEXP = /^\d{3}\s\d{3}$/g;
+  public static DISPLAY_REGEXP = /^\d{3}\s\d{3}$/;
 
   /**
    * Возвращает `true`, если строка является кодом подтверждения в

@@ -16,6 +16,11 @@ enum RpcMethod {
    * Отправляет код подтверждения смены пароли на сервер.
    */
   CONFIRM_RECOVERY_CODE = 'confirm_recovery_code',
+
+  /**
+   * Изменяет пароль пользователя.
+   */
+  CHANGE_PASSWORD = 'change_password',
 }
 
 export default RpcMethod;

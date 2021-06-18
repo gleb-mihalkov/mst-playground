@@ -5,6 +5,8 @@ import getStore from 'utils/getStore';
 import assign from 'utils/assign';
 import RpcErrorCode from 'consts/RpcErrorCode';
 import RecoveryStep from 'consts/RecoveryStep';
+import AuthTokens from 'entities/AuthTokens';
+import StorageKey from 'consts/StorageKey';
 
 /**
  * Модель сценария восстановления пароля пользователя.
@@ -27,7 +29,7 @@ export default types
      * время, через которое снова можно, либо сохранять телефон, с которого
      * больше нельзя... Пока пускай будет как есть - демка же.
      */
-    isLimitExceeded: types.optional(types.boolean, false),
+    isTriesExceeded: types.optional(types.boolean, false),
 
     /**
      * Номер телефона, который ввёл пользователь.
@@ -46,7 +48,7 @@ export default types
      */
     get step() {
       if (self.code) {
-        return RecoveryStep.NEW_PASSWORD;
+        return RecoveryStep.PASSWORD;
       }
 
       if (self.phone) {
@@ -79,7 +81,7 @@ export default types
           )
         ) {
           assign(self, {
-            isLimitExceeded: true,
+            isTriesExceeded: true,
             pending: false,
           });
           return;
@@ -93,6 +95,8 @@ export default types
         phone,
         pending: false,
       });
+
+      store.storage.api.set(StorageKey.RECOVERY_PHONE, phone);
     },
 
     /**
@@ -121,7 +125,7 @@ export default types
           )
         ) {
           assign(self, {
-            isLimitExceeded: true,
+            isTriesExceeded: true,
             pending: false,
           });
           return;
@@ -135,6 +139,52 @@ export default types
         code,
         pending: false,
       });
+
+      store.storage.api.set(StorageKey.RECOVERY_CODE, code);
+    },
+
+    /**
+     * Обрабатывает отправку формы ввода нового пароля на третьем шаге
+     * восстановления. После успешной отправки пользователь делается
+     * авторизованным.
+     * @param password Пароль.
+     */
+    async submitPassword(password: string) {
+      if (!self.phone) {
+        throw new Error(`Expect self.phone to be defined`);
+      }
+
+      if (!self.code) {
+        throw new Error(`Expect self.code to be defined`);
+      }
+
+      assign(self, { pending: true });
+
+      const store = getStore(self);
+
+      let tokens: AuthTokens;
+
+      try {
+        tokens = await store.rpc.api.changePassword(
+          password,
+          self.phone,
+          self.code
+        );
+      } catch (error) {
+        assign(self, { pending: false });
+        throw error;
+      }
+
+      await store.auth.authorize(tokens);
+
+      assign(self, {
+        pending: false,
+        phone: undefined,
+        code: undefined,
+      });
+
+      store.storage.api.remove(StorageKey.RECOVERY_PHONE);
+      store.storage.api.remove(StorageKey.RECOVERY_CODE);
     },
 
     /**
@@ -143,22 +193,51 @@ export default types
      * страницу в истории.
      */
     async back() {
+      const store = getStore(self);
+
       switch (self.step) {
-        case RecoveryStep.NEW_PASSWORD: {
+        case RecoveryStep.PASSWORD: {
+          store.storage.api.remove(StorageKey.RECOVERY_CODE);
           assign(self, { code: undefined });
           return;
         }
 
         case RecoveryStep.CODE: {
+          store.storage.api.remove(StorageKey.RECOVERY_PHONE);
           assign(self, { phone: undefined });
           return;
         }
 
         default: {
-          const store = getStore(self);
           store.router.api.back();
           return;
         }
       }
+    },
+
+    /**
+     * Прерывает процесс востановления пароля, очищая все сохранённые данные.
+     */
+    abort() {
+      const store = getStore(self);
+
+      assign(self, {
+        pending: false,
+        phone: undefined,
+        code: undefined,
+      });
+
+      store.storage.api.remove(StorageKey.RECOVERY_PHONE);
+      store.storage.api.remove(StorageKey.RECOVERY_CODE);
+    },
+
+    /**
+     * @inheritdoc
+     */
+    afterMount() {
+      const store = getStore(self);
+
+      self.phone = store.storage.api.get(StorageKey.RECOVERY_PHONE);
+      self.code = store.storage.api.get(StorageKey.RECOVERY_CODE);
     },
   }));

@@ -15,7 +15,7 @@ enum RecoveryStep {
   /**
    * Третий шаг - ввод нового пароля.
    */
-  NEW_PASSWORD = 'new_password',
+  PASSWORD = 'password',
 }
 
 export default RecoveryStep;

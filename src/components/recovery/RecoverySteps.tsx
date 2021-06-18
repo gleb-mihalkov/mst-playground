@@ -1,22 +1,24 @@
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 import { observer } from 'mobx-react';
 
 import useStore from 'hooks/useStore';
 import RecoveryPhoneForm from './RecoveryPhoneForm';
 import RecoveryCodeForm from './RecoveryCodeForm';
-import RecoveryNewPasswordForm from './RecoveryNewPasswordForm';
+import RecoveryPasswordForm from './RecoveryPasswordForm';
 import RecoveryStep from 'consts/RecoveryStep';
 
 /**
  * Отображает один из трёх шагов восстановления пароля (в зависимости от того,
  * на какой стадии процесса находится пользователь).
  */
-const RecoveryStepper: FC = () => {
+const RecoverySteps: FC = () => {
   const store = useStore();
 
+  useEffect(() => () => store.recovery.abort(), [store]);
+
   switch (store.recovery.step) {
-    case RecoveryStep.NEW_PASSWORD: {
-      return <RecoveryNewPasswordForm />;
+    case RecoveryStep.PASSWORD: {
+      return <RecoveryPasswordForm />;
     }
 
     case RecoveryStep.CODE: {
@@ -29,4 +31,4 @@ const RecoveryStepper: FC = () => {
   }
 };
 
-export default observer(RecoveryStepper);
+export default observer(RecoverySteps);
