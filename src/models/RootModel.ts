@@ -4,6 +4,7 @@ import StorageModel from './StorageModel';
 import AuthModel from './AuthModel';
 import RpcModel from './RpcModel';
 import LoginModel from './LoginModel';
+import RecoveryModel from './RecoveryModel';
 
 /**
  * Хранилище моделей системы.
@@ -32,4 +33,9 @@ export default types
      * Модель сценария входа в систему.
      */
     login: types.optional(LoginModel, () => LoginModel.create()),
+
+    /**
+     * Модель сценария восстановления пароля пользователя.
+     */
+    recovery: types.optional(RecoveryModel, () => RecoveryModel.create()),
   });

@@ -6,6 +6,8 @@ import memoize from 'memoize-one';
 import PhoneHelper from 'helpers/PhoneHelper';
 import useFormik from 'hooks/useFormik';
 import withInputMask from 'hocs/withInputMask';
+import useStore from 'hooks/useStore';
+import { observer } from 'mobx-react';
 
 const PhoneField = withInputMask(TextField);
 
@@ -46,6 +48,8 @@ const getSchema = memoize(
  * Отображает форму ввода телефона на первом шаге восстановления пароля.
  */
 const RecoveryPhoneForm: FC = () => {
+  const store = useStore();
+
   const formik = useFormik({
     name: 'recoveryPhone',
     validateOnSchemaChange: true,
@@ -54,7 +58,12 @@ const RecoveryPhoneForm: FC = () => {
       phone: '',
     },
 
-    validationSchema: getSchema(false),
+    validationSchema: getSchema(store.recovery.isRequestsLimitExceeded),
+
+    onSubmit(values) {
+      const phone = PhoneHelper.parseDisplay(values.phone);
+      store.recovery.submitPhone(phone);
+    },
   });
 
   return (
@@ -76,6 +85,7 @@ const RecoveryPhoneForm: FC = () => {
             {...formik.bindSubmitButton()}
             variant="contained"
             color="primary"
+            disabled={store.recovery.pending}
           >
             Отправить
           </Button>
@@ -85,4 +95,4 @@ const RecoveryPhoneForm: FC = () => {
   );
 };
 
-export default RecoveryPhoneForm;
+export default observer(RecoveryPhoneForm);

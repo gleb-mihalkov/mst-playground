@@ -108,4 +108,22 @@ export default class RpcService {
 
     return tokens;
   }
+
+  /**
+   * Отправляет код подтверждения смены пароля на указанный телефон.
+   * @param phone Номер телефона.
+   */
+  public async requestRecoveryCode(phone: string) {
+    const params = { phone };
+
+    await this.fetch(RpcMethod.REQUEST_RECOVERY_CODE, params);
+
+    if (phone === '70000000000') {
+      throw this.makeError(
+        RpcMethod.REQUEST_RECOVERY_CODE,
+        params,
+        RpcErrorCode.RECOVERY_CODE_REQUESTS_LIMIT_EXCEEDED
+      );
+    }
+  }
 }
