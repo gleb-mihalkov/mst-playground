@@ -11,6 +11,11 @@ enum RpcMethod {
    * Запрашивает код СМС с кодом подтверждения смены пароля.
    */
   REQUEST_RECOVERY_CODE = 'request_recovery_code',
+
+  /**
+   * Отправляет код подтверждения смены пароли на сервер.
+   */
+  CONFIRM_RECOVERY_CODE = 'confirm_recovery_code',
 }
 
 export default RpcMethod;

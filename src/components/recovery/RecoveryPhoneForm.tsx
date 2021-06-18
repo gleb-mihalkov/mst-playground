@@ -58,7 +58,7 @@ const RecoveryPhoneForm: FC = () => {
       phone: '',
     },
 
-    validationSchema: getSchema(store.recovery.isRequestsLimitExceeded),
+    validationSchema: getSchema(store.recovery.isLimitExceeded),
 
     onSubmit(values) {
       const phone = PhoneHelper.parseDisplay(values.phone);

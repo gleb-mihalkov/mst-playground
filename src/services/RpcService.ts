@@ -126,4 +126,24 @@ export default class RpcService {
       );
     }
   }
+
+  /**
+   * Отправляет на сервер код подтверждения, полученный пользователем
+   * в СМС при восстановлении пароля.
+   * @param code Код подтверждения.
+   * @param phone Телефон пользователя.
+   */
+  public async confirmRecoveryCode(code: string, phone: string) {
+    const params = { phone, code };
+
+    await this.fetch(RpcMethod.CONFIRM_RECOVERY_CODE, params);
+
+    if (code === '000000') {
+      throw this.makeError(
+        RpcMethod.CONFIRM_RECOVERY_CODE,
+        params,
+        RpcErrorCode.RECOVERY_CODE_CONFIRMATIONS_LIMIT_EXCEEDED
+      );
+    }
+  }
 }

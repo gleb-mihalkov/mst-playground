@@ -5,6 +5,7 @@ import AuthModel from './AuthModel';
 import RpcModel from './RpcModel';
 import LoginModel from './LoginModel';
 import RecoveryModel from './RecoveryModel';
+import RouterModel from './RouterModel';
 
 /**
  * Хранилище моделей системы.
@@ -13,6 +14,11 @@ export default types
   .model('RootModel')
 
   .props({
+    /**
+     * Модель сценария взаимодействия с маршрутизатором приложения.
+     */
+    router: types.optional(RouterModel, () => RouterModel.create()),
+
     /**
      * Модель сценария взаимодействия с сервисом, отвечающим за постоянное
      * хранение значений в localStorage.

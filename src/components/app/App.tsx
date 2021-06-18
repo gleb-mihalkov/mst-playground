@@ -1,6 +1,7 @@
 import { FC, PropsWithChildren } from 'react';
 import AppLayout from './AppLayout';
 
+import ConnectRouter from 'components/router/ConnectRouter';
 import AppMaterialUiProvider from './AppMaterialUiProvider';
 import AppStoreProvider from './AppStoreProvider';
 
@@ -21,6 +22,7 @@ type Props = PropsWithChildren<{
 const App: FC<Props> = ({ children, pathname }) => (
   <AppMaterialUiProvider>
     <AppStoreProvider>
+      <ConnectRouter />
       <AppLayout pathname={pathname}>{children}</AppLayout>
     </AppStoreProvider>
   </AppMaterialUiProvider>
