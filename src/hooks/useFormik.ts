@@ -153,70 +153,127 @@ export default function useFormik<TValues extends FormikValues>({
     }
   }, [validationSchema]);
 
+  /**
+   * Возвращает коллекцию свойств, которые подключают элемент формы в
+   * контекст Formik.
+   */
+  function bindForm() {
+    return {
+      name: formName,
+      id: formId,
+      onSubmit: formik.handleSubmit,
+      onReset: formik.handleReset,
+      noValidate: true,
+    };
+  }
+
+  /**
+   * Возвращает коллекцию свойств, которые подключают кнопку отправки формы
+   * в контекст Formik.
+   */
+  function bindSubmitButton() {
+    const id = joinId(formName, 'submit', 'button');
+
+    return {
+      id,
+      form: formId,
+      type: 'submit' as 'submit',
+    };
+  }
+
+  /**
+   * Возвращает текст ошибки указанного поля ввода.
+   * @param name Название поля ввода.
+   */
+  function errorOf(name: keyof TValues) {
+    const touched = getIn(formik.touched, name as string);
+    const error = getIn(formik.errors, name as string);
+
+    const isErrorShowed = touched && error != null;
+    const errorMessage = isErrorShowed ? error : undefined;
+
+    return errorMessage;
+  }
+
+  /**
+   * Возвращает текущее значение указанного поля ввода.
+   * @param name Название поля ввода.
+   */
+  function valueOf(name: keyof TValues) {
+    const value = getIn(formik.values, name as string);
+    return value;
+  }
+
+  /**
+   * Возвращает коллекцию свойств, которые подключают компонент `FormControl`
+   * к состояню формы.
+   * @param name Название поля ввода.
+   */
+  function bindFormControl(name: keyof TValues) {
+    const error = errorOf(name) == null ? undefined : true;
+    return { error };
+  }
+
+  /**
+   * Возвращает коллекцию свойств, которые подключают компонент `InputLabel`
+   * к состояню формы.
+   * @param name Название поля ввода.
+   */
+  function bindInputLabel(name: keyof TValues) {
+    const htmlFor = joinId(formName, name as string);
+    return { htmlFor };
+  }
+
+  /**
+   * Возвращает коллекцию свойств, которые подключают компонент `Input`
+   * к состояню формы.
+   * @param name Название поля ввода.
+   */
+  function bindInput(name: keyof TValues) {
+    const id = joinId(formName, name as string);
+    const value = valueOf(name);
+
+    function onChange(data: any) {
+      if (typeof data === 'object' && data.target != null) {
+        formik.handleChange(data);
+      } else {
+        formik.setFieldValue(name as string, data);
+      }
+    }
+
+    return {
+      onChange,
+      value,
+      id,
+      name: String(name),
+      onBlur: formik.handleBlur,
+    };
+  }
+
+  /**
+   * Возвращает коллекцию свойств, которые подключают поле ввода `TextField`
+   * в контекст Formik.
+   * @param name Название поля ввода.
+   */
+  function bindTextField(name: keyof TValues) {
+    const errorMessage = errorOf(name);
+
+    return {
+      ...bindInput(name),
+      helperText: errorMessage,
+      error: errorMessage != null,
+    };
+  }
+
   return {
     ...formik,
-
-    /**
-     * Возвращает коллекцию свойств, которые подключают элемент формы в
-     * контекст Formik.
-     */
-    bindForm() {
-      return {
-        name: formName,
-        id: formId,
-        onSubmit: formik.handleSubmit,
-        onReset: formik.handleReset,
-        noValidate: true,
-      };
-    },
-
-    /**
-     * Возвращает коллекцию свойств, которые подключают поле ввода `TextField`
-     * в контекст Formik.
-     * @param name Название поля ввода.
-     */
-    bindTextField(name: keyof TValues) {
-      const id = joinId(formName, name as string);
-
-      const touched = getIn(formik.touched, name as string);
-      const error = getIn(formik.errors, name as string);
-
-      const isErrorShowed = touched && error != null;
-      const errorMessage = isErrorShowed ? error : undefined;
-
-      const value = getIn(formik.values, name as string);
-
-      function onChange(data: any) {
-        if (typeof data === 'object' && data.target != null) {
-          formik.handleChange(data);
-        } else {
-          formik.setFieldValue(name as string, data);
-        }
-      }
-
-      return {
-        onChange,
-        value,
-        id,
-        name: String(name),
-        onBlur: formik.handleBlur,
-        helperText: errorMessage,
-        error: isErrorShowed,
-      };
-    },
-
-    /**
-     * Возвращает коллекцию свойств, которые подключают кнопку отправки формы
-     * в контекст Formik.
-     */
-    bindSubmitButton() {
-      const id = joinId(formName, 'submit', 'button');
-
-      return {
-        id,
-        form: formId,
-        type: 'submit' as 'submit',
-      };
-    },
+    bindSubmitButton,
+    bindFormControl,
+    bindInputLabel,
+    bindTextField,
+    bindInput,
+    bindForm,
+    errorOf,
+    valueOf,
   };
 }

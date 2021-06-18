@@ -1,11 +1,22 @@
-import { FC } from 'react';
-import { Grid, TextField, Button } from '@material-ui/core';
+import { FC, PropsWithChildren } from 'react';
+import { observer } from 'mobx-react';
+import {
+  Grid,
+  TextField,
+  Button,
+  FormControl,
+  InputLabel,
+  OutlinedInput,
+  FormHelperText,
+} from '@material-ui/core';
 import * as Yup from 'yup';
 import memoizeOne from 'memoize-one';
 
 import useFormik from 'hooks/useFormik';
 import useStore from 'hooks/useStore';
-import { observer } from 'mobx-react';
+import PasswordHelper from 'helpers/PasswordHelper';
+import PasswordStrength from 'consts/PasswordStrength';
+import RecoveryPasswordFormHint from './RecoveryPasswordFormHint';
 
 /**
  * Значения формы.
@@ -20,6 +31,21 @@ interface Values {
    * Подтверждение пароля.
    */
   passwordAgain: string;
+
+  /**
+   * Фальшивое поле для проверки условия "как минимум одна буква".
+   */
+  fakeOneLetter: string;
+
+  /**
+   * Фальшивое поле для провеки условия "как минимум одна цифра".
+   */
+  fakeOneDigit: string;
+
+  /**
+   * Фальшивое поле для показа условия "минимальная длина".
+   */
+  fakeLength: string;
 }
 
 /**
@@ -40,6 +66,42 @@ const getSchema = memoizeOne(
             return context.parent.password === context.parent.passwordAgain;
           },
         }),
+
+      fakeOneLetter: Yup.string().test({
+        name: 'one_letter',
+        exclusive: true,
+        message: 'true',
+        test(_, context) {
+          const { password = '' } = context.parent;
+          return PasswordHelper.checkStrength(password)[
+            PasswordStrength.ONE_LETTER
+          ];
+        },
+      }),
+
+      fakeOneDigit: Yup.string().test({
+        name: 'one_digit',
+        exclusive: true,
+        message: 'true',
+        test(_, context) {
+          const { password = '' } = context.parent;
+          return PasswordHelper.checkStrength(password)[
+            PasswordStrength.ONE_DIGIT
+          ];
+        },
+      }),
+
+      fakeLength: Yup.string().test({
+        name: 'one_length',
+        exclusive: true,
+        message: 'true',
+        test(_, context) {
+          const { password = '' } = context.parent;
+          return PasswordHelper.checkStrength(password)[
+            PasswordStrength.LENGTH
+          ];
+        },
+      }),
     })
 );
 
@@ -55,6 +117,15 @@ const RecoveryPasswordForm: FC = () => {
     initialValues: {
       password: '',
       passwordAgain: '',
+      fakeOneLetter: '',
+      fakeOneDigit: '',
+      fakeLength: '',
+    },
+
+    initialTouched: {
+      fakeOneLetter: true,
+      fakeOneDigit: true,
+      fakeLength: true,
     },
 
     validationSchema: getSchema(),
@@ -64,18 +135,46 @@ const RecoveryPasswordForm: FC = () => {
     },
   });
 
+  function getHintStatus(name: keyof Values) {
+    const value = formik.valueOf('password');
+    const error = formik.errorOf(name);
+
+    if (!value) {
+      return undefined;
+    }
+
+    return !error;
+  }
+
   return (
     <form {...formik.bindForm()}>
       <Grid container spacing={2}>
         <Grid item md={12}>
-          <TextField
-            {...formik.bindTextField('password')}
-            type="password"
-            autoComplete="off"
+          <FormControl
+            {...formik.bindFormControl('password')}
             variant="outlined"
-            placeholder=""
-            label="Новый пароль"
-          />
+          >
+            <InputLabel {...formik.bindInputLabel('password')}>
+              Новый пароль
+            </InputLabel>
+            <OutlinedInput
+              {...formik.bindInput('password')}
+              type="password"
+              autoComplete="off"
+              placeholder=""
+              label="Новый пароль"
+            />
+            <FormHelperText>{formik.errorOf('password')}</FormHelperText>
+            <RecoveryPasswordFormHint status={getHintStatus('fakeOneLetter')}>
+              Пароль содержит как минимум одну букву
+            </RecoveryPasswordFormHint>
+            <RecoveryPasswordFormHint status={getHintStatus('fakeOneDigit')}>
+              Пароль содержит как минимум одну цифру
+            </RecoveryPasswordFormHint>
+            <RecoveryPasswordFormHint status={getHintStatus('fakeLength')}>
+              Длина пароля не менее шести символов
+            </RecoveryPasswordFormHint>
+          </FormControl>
         </Grid>
         <Grid item md={12}>
           <TextField
