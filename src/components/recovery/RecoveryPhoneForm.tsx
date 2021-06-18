@@ -1,11 +1,13 @@
 import { FC } from 'react';
-import { Grid, Button } from '@material-ui/core';
+import { Grid, Button, TextField } from '@material-ui/core';
 import * as Yup from 'yup';
 import memoize from 'memoize-one';
 
-import MaskField from 'components/inputs/MaskField';
 import PhoneHelper from 'helpers/PhoneHelper';
 import useFormik from 'hooks/useFormik';
+import withInputMask from 'hocs/withInputMask';
+
+const PhoneField = withInputMask(TextField);
 
 /**
  * Значения формы.
@@ -59,7 +61,7 @@ const RecoveryPhoneForm: FC = () => {
     <form {...formik.bindForm()}>
       <Grid container spacing={2}>
         <Grid item md={12}>
-          <MaskField
+          <PhoneField
             {...formik.bindTextField('phone')}
             variant="outlined"
             label="Номер телефона"
